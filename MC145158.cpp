@@ -158,53 +158,63 @@ void MC145158::setFrequencyByDipSw()
 
 void MC145158::commitConfig()
 {
+  // 1. Calcula o divisor de referência (R)
+  // O cristal é dividido por R para gerar a Phase Comparison Frequency
   _R_counter = (uint16_t)(_xtal / _phase_det_freq); 
 
-  // Cálculo do N total (divisor total)
-  // f_vco = [(P * N) + A] * f_ref
-  float f_vco = (_freq + _freq_shift) * 1000.0f; // KHz
+  // 2. Calcula a frequência de saída desejada em KHz
+  float f_vco = (_freq + _freq_shift) * 1000.0f; 
+
+  // 3. Calcula o divisor total necessário (N_total)
+  // N_total = f_vco / f_comparacao
   uint32_t total_divider = (uint32_t)(f_vco / _phase_det_freq);
 
-  // Separação para síntese dual-modulus:
+  // 4. Separação Universal para qualquer Prescaler (P)
+  // N = total_divider / P
+  // A = total_divider % P
+  // Se for um prescaler fixo (como LB3500 /8), A será o resto da divisão.
   _N_counter = total_divider / _prescaler;
   _A_counter = total_divider % _prescaler;
 
-#ifdef DEBUG
-   Serial.println();
-   Serial.println(F("Calculado:"));
-   Serial.print(F("A+N=")); Serial.println(_d);
-   Serial.print(F("A=0x")); Serial.print(_A_counter, HEX); Serial.print(F(", A=")); Serial.print(_A_counter);
-   Serial.print(F(", N=0x")); Serial.print(_N_counter, HEX); Serial.print(F(", N=")); Serial.println(_N_counter);
-   Serial.print(F("R=")); Serial.println(_R_counter);
-   Serial.println();
-#endif
+  // Validação de segurança: N deve ser sempre maior que A em sistemas Dual-Modulus
+  if (_A_counter >= _N_counter && _prescaler > 1) {
+    #ifdef DEBUG
+      Serial.println(F("ERRO: N deve ser maior que A. Verifique o Prescaler/Frequência."));
+    #endif
+  }
 
-  // --- Envio de N e A (18 bits total: 10 de N, 7 de A, 1 de Controle) ---
-  // Estrutura: [10 bits N] [7 bits A] [Bit C=0]
+  // 5. Montagem do frame de N e A (18 bits)
+  // Formato: [N: 10 bits] [A: 7 bits] [Endereço: 1 bit (0)]
   uint32_t dataNA = 0;
-  dataNA |= (_N_counter & 0x3FF) << 8; // Desloca N para o topo
-  dataNA |= (_A_counter & 0x7F) << 1;  // A no meio
-  dataNA |= 0;                         // Bit de controle C=0 (LSB)
+  dataNA |= (_N_counter & 0x3FF) << 8; // Posiciona N nos bits 17-8
+  dataNA |= (_A_counter & 0x7F) << 1;  // Posiciona A nos bits 7-1
+  dataNA |= 0;                         // Bit C = 0 seleciona Reg N e A
 
 
 #ifdef DEBUG
   Serial.println(F("Conteúdo dos Registradores:"));
   Serial.print("N+A = ");
-#endif
+#endif 
   MC145158::sendData(dataNA, 18);
   MC145158::pulseLe();
 
-  // --- Envio de R (15 bits total: 14 de R, 1 de Controle) ---
-  // Estrutura: [14 bits R] [Bit C=1]
-  uint16_t dataR = 0;
-  dataR |= (_R_counter & 0x3FFF) << 1; // 14 bits de R
-  dataR |= 1;                          // Bit de controle C=1 (LSB)
+  // 6. Montagem do frame de R (15 bits)
+  // Formato: [R: 14 bits] [Endereço: 1 bit (1)]
+  uint32_t dataR = 0;
+  dataR |= (_R_counter & 0x3FFF) << 1; // Posiciona R nos bits 14-1
+  dataR |= 1;                          // Bit C = 1 seleciona Reg R
 
 #ifdef DEBUG
   Serial.print("R   =    ");
 #endif
   MC145158::sendData(dataR, 15);
   MC145158::pulseLe();
+
+#ifdef DEBUG
+   Serial.print(F("F_VCO: ")); Serial.print(f_vco); Serial.println(F(" KHz"));
+   Serial.print(F("N_total: ")); Serial.println(total_divider);
+   Serial.print(F("N: ")); Serial.print(_N_counter);
+   Serial.print(F(" A: ")); Serial.println(_A_counter);
+   Serial.print(F("R: ")); Serial.println(_R_counter);
+#endif
 }
-
-
