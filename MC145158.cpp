@@ -80,20 +80,17 @@ void MC145158::bitDelay()
 void MC145158::sendData(uint32_t data, uint8_t len)
 {
   uint32_t D = data;
+   
+  for (int i = len - 1; i >= 0; i--) 
+  {
+    // Verifica o bit i deslocando e comparando
+    bool bit = (D >> i) & 1;
     
-  for (int i = len-1; i >= 0; i--) {
-
-    if (bitRead(D, i) == HIGH){
-      digitalWrite (_data_pin, HIGH);
+    digitalWrite(_data_pin, bit ? HIGH : LOW);
+    
 #ifdef DEBUG
-      Serial.print("1");
-#endif
-    }else{
-      digitalWrite (_data_pin, LOW);
-#ifdef DEBUG
-      Serial.print("0");
-#endif
-    }
+    Serial.print(bit ? "1" : "0");
+#endif   
 
     MC145158::bitDelay();
     digitalWrite (_clock_pin, HIGH); // rising edge latches data
@@ -161,21 +158,16 @@ void MC145158::setFrequencyByDipSw()
 
 void MC145158::commitConfig()
 {
-  _R_counter = _xtal / _phase_det_freq; 
+  _R_counter = (uint16_t)(_xtal / _phase_det_freq); 
 
-  float _f = _freq;
-  _f += _freq_shift; // FI
-  _f *= 1000.0f; // MHz to KHz 
-  _f /= _prescaler;
-  _f /= _phase_det_freq;
+  // Cálculo do N total (divisor total)
+  // f_vco = [(P * N) + A] * f_ref
+  float f_vco = (_freq + _freq_shift) * 1000.0f; // KHz
+  uint32_t total_divider = (uint32_t)(f_vco / _phase_det_freq);
 
-  uint32_t _d = _f;
-
-  // copies the seven most significant bits after the tenth bit
-  _A_counter = (_d >> 10) & 0x7F; // 0x7F = 0b1111111
-
-  // copy only the first 10 bits
-  _N_counter = (_d & 0x3FF); // 0x3FF = 0b1111111111
+  // Separação para síntese dual-modulus:
+  _N_counter = total_divider / _prescaler;
+  _A_counter = total_divider % _prescaler;
 
 #ifdef DEBUG
    Serial.println();
@@ -187,32 +179,32 @@ void MC145158::commitConfig()
    Serial.println();
 #endif
 
-  // Send "(_N_counter << 8)|(_A_counter << 1)", 17 bits, MSB first, LSB always zero
+  // --- Envio de N e A (18 bits total: 10 de N, 7 de A, 1 de Controle) ---
+  // Estrutura: [10 bits N] [7 bits A] [Bit C=0]
+  uint32_t dataNA = 0;
+  dataNA |= (_N_counter & 0x3FF) << 8; // Desloca N para o topo
+  dataNA |= (_A_counter & 0x7F) << 1;  // A no meio
+  dataNA |= 0;                         // Bit de controle C=0 (LSB)
+
+
 #ifdef DEBUG
   Serial.println(F("Conteúdo dos Registradores:"));
   Serial.print("N+A = ");
 #endif
-  MC145158::sendData((_N_counter << 8) | (_A_counter << 1), 18);
-  MC145158::pulseLe(); // Latch it
+  MC145158::sendData(dataNA, 18);
+  MC145158::pulseLe();
 
-  // Send "(_R_counter << 1) | 1", 14 bits, MSB first, LSB always one
+  // --- Envio de R (15 bits total: 14 de R, 1 de Controle) ---
+  // Estrutura: [14 bits R] [Bit C=1]
+  uint16_t dataR = 0;
+  dataR |= (_R_counter & 0x3FFF) << 1; // 14 bits de R
+  dataR |= 1;                          // Bit de controle C=1 (LSB)
+
 #ifdef DEBUG
   Serial.print("R   =    ");
 #endif
-  MC145158::sendData((_R_counter << 1) | 1, 15);
-  MC145158::pulseLe(); // Latch it
-
-
-#ifdef EXAMPLE_DATA
-  Serial.println();
-  Serial.println(F("Dados de Exemplo:"));
-  Serial.print("N+A = ");
-  MC145158::sendData(0b010000000100000000, 18);
+  MC145158::sendData(dataR, 15);
   MC145158::pulseLe();
-  Serial.print("R   =    ");
-  MC145158::sendData(0b100001000010001, 15);
-  MC145158::pulseLe();
-  Serial.println();
-#endif
-
 }
+
+
