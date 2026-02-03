@@ -77,10 +77,12 @@ Contributions are welcome! Please fork the repository and send a pull request.
 
 ## Changelog
 
-- **v1.0.0 (2024/06/18)**: Initial commit.
-- **v1.0.1 (2024/06/18)**: function name fix.
-- **v1.0.2 (2024/06/22)**: Bug fix.
-- **v1.0.3 (2025/02/07)**: DipSW support.
+- **v1.0.0.0 (2024/06/18)**: Initial commit.
+- **v1.0.0.1 (2024/06/18)**: function name fix.
+- **v1.0.0.2 (2024/06/22)**: bug fix.
+- **v1.0.0.3 (2025/02/07)**: DipSW support.
+- **v1.0.0.4 (2025/07/23)**: minor bug fix 
+- **v1.0.0.5 (2026/02/03)**: fix registers N and A
 
 ## License
 

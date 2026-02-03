@@ -1,7 +1,7 @@
 /*
   Lib: PLL MC145158
-  Version: 1.0.3
-  Date: 2025/02/07
+  Version: 1.0.4
+  Date: 2026/02/03
   Author: Junon M
   License: GPLv3
 */
