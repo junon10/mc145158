@@ -1,4 +1,4 @@
-# MC145158 PLL Controller Library
+# MC145158 PLL Controller Arduino Library
 
 ## Description
 
