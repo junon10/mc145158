@@ -1,7 +1,7 @@
 /*
   Lib: PLL MC145158
-  Version: 1.0.3
-  Date: 2025/02/07
+  Version: 1.0.0.8
+  Date: 2026/02/25
   Author: Junon M
   Hardware: Arduino Uno or Nano with DipSwitch
 */

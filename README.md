@@ -83,6 +83,8 @@ Contributions are welcome! Please fork the repository and send a pull request.
 - **v1.0.0.3 (2025/02/07)**: DipSW support.
 - **v1.0.0.4 (2025/07/23)**: minor bug fix 
 - **v1.0.0.5 (2026/02/03)**: fix registers N and A
+- **v1.0.0.7 (2026/02/03)**: improvements
+- **v1.0.0.8 (2026/02/25)**: Update Readme
 
 ## License
 
