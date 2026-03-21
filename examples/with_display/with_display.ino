@@ -1,7 +1,7 @@
 /*
   Lib: PLL MC145158
-  Version: 1.0.0.8
-  Date: 2026/02/25
+  Version: 1.0.0.9
+  Date: 2026/03/21
   Author: Junon M
   Hardware: Arduino Uno and Display module with keypad
 */
@@ -10,11 +10,15 @@
 #include "MC145158.h"
 
 //---------------------------------------------------------
-float FREQUENCY = 100.0f; // MHz (100MHz)
-const float INT_FREQ = 0.0f; // MHz (-10.7M, 0.0M, 10.7M) 
-const float PRESCALER = 8.0f; // LB3500 1/8
-const float XTAL = 4000.0f; // KHz (4MHz)
-const float PHASE_DET_FREQ = 0.5f; // KHz (500Hz)
+uint32_t FREQUENCY_KHz = 98500;            // KHz (98.5MHz)
+
+//const int32_t INT_FREQ_KHz = -10700;     // KHz (-10.7MHz) 
+const int32_t INT_FREQ_KHz =        0;     // KHz     (0MHz) 
+//const int32_t INT_FREQ_KHz =  10700;     // KHz  (10.7MHz) 
+
+const uint32_t PRESCALER = 8;              // LB3500 1/8
+const uint32_t CRYSTAL_KHz = 4000;         // KHz (4MHz)
+const uint32_t PHASE_DET_FREQ_Hz = 12500;  // Hz  (12500Hz)
 //---------------------------------------------------------
 
 //---------------------------------------------------------
@@ -48,12 +52,12 @@ void setup() {
   pll.begin(CLOCK_PIN, DATA_PIN, LE_PIN);
 
   pll.config( 
-  /* Intermediate Freq in MHz */ INT_FREQ, 
+  /* Intermediate Freq in KHz */ INT_FREQ_KHz, 
   /* External Prescaler Divider */ PRESCALER, 
-  /* Ref Clock in KHz */ XTAL, 
-  /* Phase Det Freq in KHz */ PHASE_DET_FREQ);
+  /* Ref Clock in KHz */ CRYSTAL_KHz, 
+  /* Phase Det Freq in KHz */ PHASE_DET_FREQ_Hz);
 
-  pll.setFrequency(/* Freq in MHz */ FREQUENCY);
+  pll.setFrequency(/* Freq in KHz */ FREQUENCY_KHz);
 
   Serial.println();
   Serial.println("PLL MC145158");
@@ -64,8 +68,8 @@ void setup() {
   
   lcd.setCursor(0,1);
   lcd.print("Freq: ");
-  lcd.print(FREQUENCY, 1);
-  lcd.print("MHz");
+  lcd.print(FREQUENCY_KHz, 0);
+  lcd.print("KHz");
 }
 
 
