@@ -1,7 +1,7 @@
 /*
   Lib: PLL MC145158
-  Version: 1.0.0.9
-  Date: 2026/03/21
+  Version: 1.0.0.10
+  Date: 2026/03/22
   Author: Junon M
   License: GPLv3
 */
@@ -12,7 +12,7 @@
 #include <Arduino.h>
 
 //==============================================================================
-//                              Constantes
+//                              Constants
 //==============================================================================
 #define FACTOR        1080
 #define SW_COUNT      8
@@ -59,12 +59,15 @@ class MC145158
     MC145158();
     virtual ~MC145158();
     void begin(const uint8_t clock_pin, const uint8_t data_pin, const uint8_t le_pin);
-    void setDipSwPinout(const uint8_t b7, const uint8_t b6, const uint8_t b5, const uint8_t b4, 
+    void setDipSwitchPins(const uint8_t b7, const uint8_t b6, const uint8_t b5, const uint8_t b4, 
     const uint8_t b3, const uint8_t b2, const uint8_t b1, const uint8_t b0); 
     void config(int32_t f_shift_KHz = 0, uint32_t prescaler = 1, uint32_t xtal_KHz = 4000, uint32_t phase_det_freq_Hz = 500);
     void setFrequency(uint32_t KHz);
     void setFreqShift(int32_t KHz);
-    void setFrequencyByDipSw();
+    void setFrequencyFromDipSw();
+    void formatLine(char* dest, const char* label, const char* value, int width);
+    void centerText(char* buffer, const char* text, int width);
+    const char* getSeparator(int pos, int len, char ch);
     const char* getTuningStatus();
     void commitConfig();
 };

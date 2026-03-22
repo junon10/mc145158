@@ -1,34 +1,34 @@
 /*
   Lib: PLL MC145158
-  Version: 1.0.0.9
-  Date: 2026/03/21
+  Version: 1.0.0.10
+  Date: 2026/03/22
   Author: Junon M
-  Hardware: Arduino Uno or Nano by Serial Monitor
+  Hardware: Arduino Uno or Nano from Serial Monitor
 */
 
 #include "MC145158.h"
 
-const char * VERSION = "1.0.0.9";
+const char * VERSION = "1.0.0.10";
 
 //----------------------------------------------------------------
 // Configuração do menu serial
 //----------------------------------------------------------------
-const char MENU_TEXT_FREQ[] = "Frequency";
+const char MENU_TEXT_FREQ[] = "VCO Freq";
 const char INDEX_FREQ[] = "1";
 const float MAX_FREQ = 150000.f;
 const float MIN_FREQ = 1000.f;
 
-const char MENU_TEXT_INT_FREQ[] = "Intermediate Frequency";
+const char MENU_TEXT_INT_FREQ[] = "IF";
 const char INDEX_INT_FREQ[] = "2";
 const float MAX_INT_FREQ = 10700.f;
 const float MIN_INT_FREQ = -10700.f;
 
-const char MENU_TEXT_PRESCALER[] = "Prescaler";
+const char MENU_TEXT_PRESCALER[] = "Prescaler Freq";
 const char INDEX_PRESCALER[] = "3";
 const float MAX_PRESCALER = 512.0f;
 const float MIN_PRESCALER = 0.0f;
 
-const char MENU_TEXT_CRYSTAL[] = "Xtal";
+const char MENU_TEXT_CRYSTAL[] = "Xtal Freq";
 const char INDEX_CRYSTAL[] = "4";
 const float MAX_CRYSTAL = 30000.0f;
 const float MIN_CRYSTAL = 500.0f;
@@ -44,11 +44,11 @@ const int SEP_COUNT = 41;
 //----------------------------------------------------------------
 // Parâmetros iniciais
 //----------------------------------------------------------------
-float Frequency_KHz = 98500.f; // 98.5 MHz
-float Intermediate_Frequency_KHz = 0.0f; // 0.0 MHz
+float Freq_KHz = 98500.f; // 98.5 MHz
+float Int_Freq_KHz = 0.0f; // 0.0 MHz
 float Prescaler = 8.f; // Ex: LB3500 (8)
-float Crystal_KHz = 4000.f; // KHz (4MHz)
-float Phase_Det_Freq_Hz = 1250.f; // Hz (for 10Khz steps)
+float Crystal_KHz = 1000.f; // KHz (1MHz)
+float Phase_Det_Freq_Hz = 12500.f; // Hz (for 100Khz steps)
 //----------------------------------------------------------------
 
 //----------------------------------------------------------------
@@ -66,8 +66,7 @@ MC145158 pll; // Declaração do objeto pll
 void setup() {
 
   Serial.begin(115200);
-  delay(100);   
-  // Arduino pins
+  delay(100);
   pll.begin(CLOCK_PIN, DATA_PIN, LE_PIN);
   commitConfig();
   delay(1000);
@@ -83,50 +82,87 @@ void loop() {
 void commitConfig()
 {
   pll.config( 
-  /* Intermediate Freq in KHz */ (int32_t)Intermediate_Frequency_KHz, 
+  /* Intermediate Freq in KHz */ (int32_t)Int_Freq_KHz, 
   /* External Prescaler Divider */ (uint32_t)Prescaler, 
   /* Ref Clock in KHz */ (uint32_t)Crystal_KHz, 
   /* Phase Det Freq in Hz */ (uint32_t)Phase_Det_Freq_Hz);
 
-  pll.setFrequency(/* Freq in KHz */ (uint32_t)Frequency_KHz);
+  pll.setFrequency(/* Freq in KHz */ (uint32_t)Freq_KHz);
 }
 
 
-String Separator(int pos, int len, char ch)
-{
-  char corners = ' ';
-  if (pos == 0) corners = ' ';
-  else if (pos == 1) corners = '.';
-  else if (pos == 2) corners = '|';
-  else if (pos == 3) corners = '\'';
+const char* getCommands() {
+    static char msgBuffer[1024]; 
+    char line[128]; 
+    char labelBuf[64];
+    char valBuf[64];
+    const int SEP_WIDTH = 43; // Largura total (41 de preenchimento + 2 bordas)
 
-  String s = "\n" + String(corners);
-  for (int i = 0; i < len; i++) s += ch;
-  s += String(corners) + "\n";
-  return s; 
+    msgBuffer[0] = '\0';
+
+    // 1. Topo e Título Centralizado
+    strcat(msgBuffer, "\r\n");
+    strcat(msgBuffer, pll.getSeparator(1, SEP_WIDTH - 2, '='));
+    strcat(msgBuffer, "\r\n");
+    
+    pll.centerText(line, "PLL CONTROL MENU", SEP_WIDTH);
+    strcat(msgBuffer, line);
+    strcat(msgBuffer, "\r\n");
+
+    // 2. Divisória e Versão
+    strcat(msgBuffer, pll.getSeparator(2, SEP_WIDTH - 2, '='));
+    strcat(msgBuffer, "\r\n");
+    
+    // Versão centralizada ou alinhada
+    snprintf(valBuf, sizeof(valBuf), "v%s", VERSION);
+    pll.formatLine(line, "Firmware", valBuf, SEP_WIDTH);
+    strcat(msgBuffer, line);
+    strcat(msgBuffer, "\r\n");
+    
+    strcat(msgBuffer, "| Please choose an option:                |\r\n");
+    strcat(msgBuffer, "|-----------------------------------------|\r\n");
+
+    // 3. Itens do Menu (Usando formatLine para alinhar os ':')
+    
+    // Item 1: Frequência
+    snprintf(labelBuf, sizeof(labelBuf), "%s. %s", INDEX_FREQ, MENU_TEXT_FREQ);
+    snprintf(valBuf, sizeof(valBuf), "%.0f KHz", Freq_KHz);
+    pll.formatLine(line, labelBuf, valBuf, SEP_WIDTH);
+    strcat(msgBuffer, line); strcat(msgBuffer, "\r\n");
+
+    // Item 2: FI
+    snprintf(labelBuf, sizeof(labelBuf), "%s. %s", INDEX_INT_FREQ, MENU_TEXT_INT_FREQ);
+    snprintf(valBuf, sizeof(valBuf), "%.0f KHz", Int_Freq_KHz);
+    pll.formatLine(line, labelBuf, valBuf, SEP_WIDTH);
+    strcat(msgBuffer, line); strcat(msgBuffer, "\r\n");
+
+    // Item 3: Prescaler
+    snprintf(labelBuf, sizeof(labelBuf), "%s. %s", INDEX_PRESCALER, MENU_TEXT_PRESCALER);
+    snprintf(valBuf, sizeof(valBuf), "%.0f", Prescaler);
+    pll.formatLine(line, labelBuf, valBuf, SEP_WIDTH);
+    strcat(msgBuffer, line); strcat(msgBuffer, "\r\n");
+
+    // Item 4: Cristal
+    snprintf(labelBuf, sizeof(labelBuf), "%s. %s", INDEX_CRYSTAL, MENU_TEXT_CRYSTAL);
+    snprintf(valBuf, sizeof(valBuf), "%.0f KHz", Crystal_KHz);
+    pll.formatLine(line, labelBuf, valBuf, SEP_WIDTH);
+    strcat(msgBuffer, line); strcat(msgBuffer, "\r\n");
+
+    // Item 5: Fase
+    snprintf(labelBuf, sizeof(labelBuf), "%s. %s", INDEX_PHASE_DET_FREQ, MENU_TEXT_PHASE_DET_FREQ);
+    snprintf(valBuf, sizeof(valBuf), "%.0f Hz", Phase_Det_Freq_Hz);
+    pll.formatLine(line, labelBuf, valBuf, SEP_WIDTH);
+    strcat(msgBuffer, line); strcat(msgBuffer, "\r\n");
+
+    // 4. Fechamento do Menu
+    strcat(msgBuffer, pll.getSeparator(3, SEP_WIDTH - 2, '='));
+    strcat(msgBuffer, "\r\n");
+
+    // 5. Anexar o Hardware Report (ele já vem com as próprias bordas)
+    strcat(msgBuffer, pll.getTuningStatus());
+
+    return msgBuffer;
 }
-
-
-
-String getCommands() 
-{
-  String msg = "\n";
-  msg += Separator(1, SEP_COUNT, '=');
-  msg += "|                   MENU                  |";
-  msg += Separator(2, SEP_COUNT, '=');
-  msg += " PLL MC145158 v" + String(VERSION) + "\n";
-  msg += " Please choose an option:\n ";
-  msg += String(INDEX_FREQ) + ". " + String(MENU_TEXT_FREQ) + " = " + String(Frequency_KHz, 0)  + "KHz\n ";
-  msg += String(INDEX_INT_FREQ) + ". " + String(MENU_TEXT_INT_FREQ) + " = " + String(Intermediate_Frequency_KHz, 0)  + "KHz\n ";
-  msg += String(INDEX_PRESCALER) + ". " + String(MENU_TEXT_PRESCALER) + " = " + String(Prescaler, 0)  + "\n ";
-  msg += String(INDEX_CRYSTAL) + ". " + String(MENU_TEXT_CRYSTAL) + " = " + String(Crystal_KHz, 0)  + "KHz\n ";
-  msg += String(INDEX_PHASE_DET_FREQ) + ". " + String(MENU_TEXT_PHASE_DET_FREQ) + " = " + String(Phase_Det_Freq_Hz, 0)  + "Hz";
-// Recebe o ponteiro para o buffer estático
-  const char* report = pll.getTuningStatus();
-  msg += report;
-  return msg;
-}
-
 
 
 void changeParam(String &returned_text, const String menu_label, const String menu_index, String text, float &value, const float min_value, const float max_value,  const String unit)
@@ -137,8 +173,7 @@ void changeParam(String &returned_text, const String menu_label, const String me
   if (pos == 0)
   {
     returned_text = menu_index;
-    S += Separator(0, SEP_COUNT, '-');
-    S += "Enter " + menu_label + " (" + String(min_value, 2) + unit + " - " + String(max_value, 2) + unit + " )";
+    S += "\r\nEnter New " + menu_label + " (" + String(min_value, 2) + unit + " - " + String(max_value, 2) + unit + " )";
     Serial.println(S);
     pos++;
   }
@@ -162,10 +197,7 @@ void changeParam(String &returned_text, const String menu_label, const String me
       Serial.println(S);
     }
   }
-
 }
-
-
 
 
 void commandInterpreter()
@@ -183,11 +215,11 @@ void commandInterpreter()
 
     if (S.equalsIgnoreCase(INDEX_FREQ))
     {
-      changeParam(lastS, MENU_TEXT_FREQ, INDEX_FREQ, text, Frequency_KHz, MIN_FREQ, MAX_FREQ, "KHz");
+      changeParam(lastS, MENU_TEXT_FREQ, INDEX_FREQ, text, Freq_KHz, MIN_FREQ, MAX_FREQ, "KHz");
     }
     else if (S.equalsIgnoreCase(INDEX_INT_FREQ))
     {
-      changeParam(lastS, MENU_TEXT_INT_FREQ, INDEX_INT_FREQ, text, Intermediate_Frequency_KHz, MIN_INT_FREQ, MAX_INT_FREQ, "KHz");
+      changeParam(lastS, MENU_TEXT_INT_FREQ, INDEX_INT_FREQ, text, Int_Freq_KHz, MIN_INT_FREQ, MAX_INT_FREQ, "KHz");
     }
     else if (S.equalsIgnoreCase(INDEX_PRESCALER))
     {

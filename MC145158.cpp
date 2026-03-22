@@ -1,7 +1,7 @@
 /*
   Lib: PLL MC145158
-  Version: 1.0.0.9
-  Date: 2026/03/21
+  Version: 1.0.0.10
+  Date: 2026/03/22
   Author: Junon M
   License: GPLv3
 */
@@ -15,11 +15,11 @@ MC145158::MC145158() {
 
   _dip_sw_value = 0;
 
-  _freq_KHz = 10000; // KHz (10MHz)
+  _freq_KHz = 100000; // KHz (100MHz)
   _freq_shift_KHz = 0; // KHz (0 or 10700 or -10700)
-  _prescaler = 1; // Ex: [div by 8 LB3500] (1)
-  _xtal_KHz = 10000; // KHz (10MHz)
-  _phase_det_freq_Hz = 1250; // Hz (1250Hz)
+  _prescaler = 8; // Ex: [div by 8 LB3500] (1)
+  _xtal_KHz = 1000; // KHz (1MHz)
+  _phase_det_freq_Hz = 12500; // Hz (12500Hz)
 }
 
 
@@ -51,7 +51,7 @@ void MC145158::begin(const uint8_t clock_pin, const uint8_t data_pin, const uint
 }
 
 
-void MC145158::setDipSwPinout(const uint8_t b7, const uint8_t b6, const uint8_t b5, const uint8_t b4, 
+void MC145158::setDipSwitchPins(const uint8_t b7, const uint8_t b6, const uint8_t b5, const uint8_t b4, 
 const uint8_t b3, const uint8_t b2, const uint8_t b1, const uint8_t b0) 
 {
 _sw_pins[7] = b7;
@@ -86,7 +86,7 @@ void MC145158::sendData(uint32_t data, uint8_t len)
     digitalWrite(_data_pin, bit ? HIGH : LOW);
     
 #ifdef DEBUG
-    //Serial.print(bit ? "1" : "0");
+    Serial.print(bit ? "1" : "0");
 #endif   
 
     MC145158::bitDelay();
@@ -98,11 +98,11 @@ void MC145158::sendData(uint32_t data, uint8_t len)
   digitalWrite (_data_pin, HIGH);
 
 #ifdef DEBUG
-  //Serial.print(F(", HEX="));
-  //Serial.print(D, HEX);
-  //Serial.print(F(", DEC="));
-  //Serial.print(D);
-  //Serial.println();
+  Serial.print(F(", HEX="));
+  Serial.print(D, HEX);
+  Serial.print(F(", DEC="));
+  Serial.print(D);
+  Serial.println();
 #endif
 
 }
@@ -139,7 +139,7 @@ void MC145158::setFreqShift(int32_t KHz)
 }
 
 
-void MC145158::setFrequencyByDipSw()
+void MC145158::setFrequencyFromDipSw()
 {
   for (int i = 0; i < SW_COUNT; i++) {
     _dip_sw_value = bitWrite(_dip_sw_value, i, !digitalRead(_sw_pins[i])); 
@@ -152,42 +152,155 @@ void MC145158::setFrequencyByDipSw()
 }
 
 
-const char* MC145158::getTuningStatus() {
-    static char buffer[512]; 
+void MC145158::formatLine(char* dest, const char* label, const char* value, int width) {
+    const int LABEL_WIDTH = 20; // Ajusta onde o ':' vai ficar
+    dest[0] = '|';
     
-    float stepKHz = (float)_real_step_Hz / 1000.0;
-    float targetMHz = (float)_freq_total_KHz / 1000.0;
-    uint32_t totalHz = (uint32_t)_freq_KHz * 1000UL;
+    // 1. Adiciona o Label (ex: "Step Size")
+    int labelLen = strlen(label);
+    dest[1] = ' '; // Espaço inicial
+    memcpy(dest + 2, label, labelLen);
     
-    // Buffer temporário para a linha de status/erro dinâmico
-    char statusLine[64];
-    if (totalHz % _real_step_Hz != 0) {
-        float lockAt = (float)((totalHz / _real_step_Hz) * _real_step_Hz) / 1000000.0;
-        snprintf(statusLine, sizeof(statusLine), 
-                 " [!] LOCK AT      : %.4f MHz\r\n [!] STATUS       : FREQ ERROR", lockAt);
-    } else {
-        snprintf(statusLine, sizeof(statusLine), 
-                 " [+] STATUS       : PHASE LOCK READY");
+    // 2. Preenche com espaços até o separador ':'
+    for (int i = 2 + labelLen; i < LABEL_WIDTH; i++) {
+        dest[i] = ' ';
+    }
+    
+    // 3. Adiciona o separador e o valor
+    dest[LABEL_WIDTH] = ':';
+    dest[LABEL_WIDTH + 1] = ' ';
+    int valLen = strlen(value);
+    memcpy(dest + LABEL_WIDTH + 2, value, valLen);
+    
+    // 4. Preenche o resto da linha até a borda direita
+    for (int i = LABEL_WIDTH + 2 + valLen; i < width - 1; i++) {
+        dest[i] = ' ';
+    }
+    
+    dest[width - 1] = '|';
+    dest[width] = '\0';
+}
+
+
+void MC145158::centerText(char* buffer, const char* text, int width) {
+    int len = strlen(text);
+    if (len >= width - 2) {
+        // Se o texto for maior que a largura, apenas copia o que couber
+        strncpy(buffer + 1, text, width - 2);
+        return;
     }
 
-    // Formatação final do relatório
-    // Usamos \r\n para compatibilidade total com monitores seriais (Windows/Linux)
-    snprintf(buffer, sizeof(buffer),
-        "\r\n|=========================================|\r\n"
-        "|        MC145158 - HARDWARE REPORT       |\r\n"
-        "|=========================================|\r\n"
-        " [SYS] Step Size  : %.2f kHz\r\n"
-        " [SYS] Target     : %.3f MHz\r\n"
-        "%s\r\n"
-        "|-----------------------------------------|\r\n"
-        " [REG] R-Counter  : %u (Ref)\r\n"
-        " [REG] N-Counter  : %u (MSB)\r\n"
-        " [REG] A-Counter  : %u (LSB)\r\n"
-        "'========================================='",
-        stepKHz, targetMHz, statusLine, _r_final, _n_final, _a_final
-    );
+    int spaces = (width - 2 - len) / 2;
+    int extra = (width - 2 - len) % 2; // Para lidar com textos de comprimento ímpar
 
-    return buffer; 
+    // Preenche com espaços iniciais
+    for (int i = 1; i <= spaces; i++) buffer[i] = ' ';
+    
+    // Copia o texto
+    memcpy(buffer + 1 + spaces, text, len);
+    
+    // Preenche com espaços finais
+    for (int i = 1 + spaces + len; i < width - 1; i++) buffer[i] = ' ';
+    
+    // Garante as bordas e o terminador
+    buffer[0] = '|';
+    buffer[width - 1] = '|';
+    buffer[width] = '\0';
+}
+
+
+const char* MC145158::getSeparator(int pos, int len, char ch) {
+    // Buffer estático para a linha (ajuste o tamanho se len for > 60)
+    static char sepBuffer[64];
+    
+    char corner;
+    switch (pos) {
+        case 1:  corner = '.';  break; // Topo
+        case 2:  corner = '|';  break; // Meio / Divisória
+        case 3:  corner = '\''; break; // Base
+        default: corner = ' ';  break; // Espaço simples
+    }
+
+    // Limpa o buffer
+    memset(sepBuffer, 0, sizeof(sepBuffer));
+
+    int idx = 0;
+    // Adiciona quebra de linha inicial se não for a primeira linha do log
+    // sepBuffer[idx++] = '\r'; // Opcional, dependendo do seu terminal
+    // sepBuffer[idx++] = '\n'; 
+
+    sepBuffer[idx++] = corner;
+    for (int i = 0; i < len; i++) {
+        if (idx < (int)sizeof(sepBuffer) - 2) {
+            sepBuffer[idx++] = ch;
+        }
+    }
+    sepBuffer[idx++] = corner;
+    sepBuffer[idx++] = '\0'; // Fim da string
+
+    return sepBuffer;
+}
+
+
+const char* MC145158::getTuningStatus() {
+    static char finalReport[1024]; 
+    char line[128];
+    char valBuf[64];
+    const int SEP_WIDTH = 43;
+
+    finalReport[0] = '\0';
+
+    // Cabeçalho
+    strcat(finalReport, getSeparator(1, SEP_WIDTH - 2, '='));
+    strcat(finalReport, "\r\n");
+    centerText(line, "MC145158 - HARDWARE REPORT", SEP_WIDTH);
+    strcat(finalReport, line);
+    strcat(finalReport, "\r\n");
+    strcat(finalReport, getSeparator(2, SEP_WIDTH - 2, '='));
+    strcat(finalReport, "\r\n");
+
+    // --- SEÇÃO DE SISTEMA ---
+    snprintf(valBuf, sizeof(valBuf), "%.2f kHz", (float)_real_step_Hz / 1000.0);
+    formatLine(line, "Step Size", valBuf, SEP_WIDTH);
+    strcat(finalReport, line); strcat(finalReport, "\r\n");
+
+    snprintf(valBuf, sizeof(valBuf), "%.3f MHz", (float)(_freq_KHz + _freq_shift_KHz) / 1000.0);
+    formatLine(line, "Target", valBuf, SEP_WIDTH);
+    strcat(finalReport, line); strcat(finalReport, "\r\n");
+
+    // --- LÓGICA DE STATUS E ERRO ---
+    uint64_t totalHz = (uint64_t)(_freq_KHz + _freq_shift_KHz) * 1000ULL;
+    if (totalHz % _real_step_Hz != 0) {
+        float lockAtMHz = (float)((totalHz / _real_step_Hz) * _real_step_Hz) / 1000000.0;
+        snprintf(valBuf, sizeof(valBuf), "%.4f MHz", lockAtMHz);
+        formatLine(line, "Lock At", valBuf, SEP_WIDTH);
+        strcat(finalReport, line); strcat(finalReport, "\r\n");
+
+        formatLine(line, "Status", "!!! FREQ ERROR !!!", SEP_WIDTH);
+    } else {
+        formatLine(line, "Status", "PHASE LOCK READY", SEP_WIDTH);
+    }
+    strcat(finalReport, line); strcat(finalReport, "\r\n");
+
+    // --- SEÇÃO DE HARDWARE (REGISTRADORES) ---
+    strcat(finalReport, "|-----------------------------------------|\r\n");
+
+    snprintf(valBuf, sizeof(valBuf), "%u (Ref)", _r_final);
+    formatLine(line, "R-Counter", valBuf, SEP_WIDTH);
+    strcat(finalReport, line); strcat(finalReport, "\r\n");
+
+    snprintf(valBuf, sizeof(valBuf), "%u (MSB)", _n_final);
+    formatLine(line, "N-Counter", valBuf, SEP_WIDTH);
+    strcat(finalReport, line); strcat(finalReport, "\r\n");
+
+    snprintf(valBuf, sizeof(valBuf), "%u (LSB)", _a_final);
+    formatLine(line, "A-Counter", valBuf, SEP_WIDTH);
+    strcat(finalReport, line); strcat(finalReport, "\r\n");
+
+    // Base
+    strcat(finalReport, getSeparator(3, SEP_WIDTH - 2, '='));
+
+    return finalReport;
 }
 
 

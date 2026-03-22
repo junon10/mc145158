@@ -39,16 +39,14 @@ MC145158 pll;
 // Configure the PLL pins
 pll.begin(clock_pin, data_pin, dlen_pin);
 
-// DIP Switch configuration example (b7 to b0)
-pll.setDipSwPinout(b7, b6, b5, b4, b3, b2, b1, b0);
+// DIP Switch configuration example (Arduino Digital Pins 7 to 0)
+pll.setDipSwitchPins(7, 6, 5, 4, 3, 2, 1, 0);
 
 // Configure the operating frequency
-pll.setFrequency(108.0); // Frequency in MHz
+pll.setFrequency(108000); // Frequency in KHz
 // or
-pll.setFrequencyByDipSw();
+pll.setFrequencyFromDipSw();
 
-// Commit changes
-pll.commitConfig();
 ```
 
 ## Limitations
@@ -77,14 +75,16 @@ Contributions are welcome! Please fork the repository and send a pull request.
 
 ## Changelog
 
-- **v1.0.0.0 (2024/06/18)**: Initial commit.
-- **v1.0.0.1 (2024/06/18)**: function name fix.
-- **v1.0.0.2 (2024/06/22)**: bug fix.
-- **v1.0.0.3 (2025/02/07)**: DipSW support.
-- **v1.0.0.4 (2025/07/23)**: minor bug fix 
-- **v1.0.0.5 (2026/02/03)**: fix registers N and A
-- **v1.0.0.7 (2026/02/03)**: improvements
-- **v1.0.0.8 (2026/02/25)**: Update Readme
+- **v1.0.0.0  (2024/06/18)**: Initial commit.
+- **v1.0.0.1  (2024/06/18)**: function name fix.
+- **v1.0.0.2  (2024/06/22)**: bug fix.
+- **v1.0.0.3  (2025/02/07)**: DipSW support.
+- **v1.0.0.4  (2025/07/23)**: minor bug fix 
+- **v1.0.0.5  (2026/02/03)**: fix registers N and A
+- **v1.0.0.7  (2026/02/03)**: improvements
+- **v1.0.0.8  (2026/02/25)**: Update Readme
+- **v1.0.0.9  (2026/03/21)**: Refactor
+- **v1.0.0.10 (2026/03/22)**: Msg Format Improvements
 
 ## License
 
