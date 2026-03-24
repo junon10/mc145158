@@ -139,7 +139,7 @@ void MC145158::setFreqShift(int32_t KHz)
 }
 
 
-void MC145158::setFrequencyFromDipSw()
+void MC145158::setFrequencyFromDipSwitch()
 {
   for (int i = 0; i < SW_COUNT; i++) {
     _dip_sw_value = bitWrite(_dip_sw_value, i, !digitalRead(_sw_pins[i])); 

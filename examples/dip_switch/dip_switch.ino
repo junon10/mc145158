@@ -47,7 +47,7 @@ void setup() {
   /* Ref Clock in KHz */ CRYSTAL_KHz, 
   /* Phase Det Freq in Hz */ PHASE_DET_FREQ_Hz);
 
-  pll.setFrequencyFromDipSw();
+  pll.setFrequencyFromDipSwitch();
 }
 
 

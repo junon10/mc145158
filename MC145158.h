@@ -64,7 +64,7 @@ class MC145158
     void config(int32_t f_shift_KHz = 0, uint32_t prescaler = 1, uint32_t xtal_KHz = 4000, uint32_t phase_det_freq_Hz = 500);
     void setFrequency(uint32_t KHz);
     void setFreqShift(int32_t KHz);
-    void setFrequencyFromDipSw();
+    void setFrequencyFromDipSwitch();
     void formatLine(char* dest, const char* label, const char* value, int width);
     void centerText(char* buffer, const char* text, int width);
     const char* getSeparator(int pos, int len, char ch);

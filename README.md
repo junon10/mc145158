@@ -45,7 +45,7 @@ pll.setDipSwitchPins(7, 6, 5, 4, 3, 2, 1, 0);
 // Configure the operating frequency
 pll.setFrequency(108000); // Frequency in KHz
 // or
-pll.setFrequencyFromDipSw();
+pll.setFrequencyFromDipSwitch();
 
 ```
 
@@ -85,6 +85,7 @@ Contributions are welcome! Please fork the repository and send a pull request.
 - **v1.0.0.8  (2026/02/25)**: Update Readme
 - **v1.0.0.9  (2026/03/21)**: Refactor
 - **v1.0.0.10 (2026/03/22)**: Msg Format Improvements
+- **v1.0.0.11 (2026/03/24)**: function name fix
 
 ## License
 
