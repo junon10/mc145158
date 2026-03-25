@@ -75,17 +75,20 @@ Contributions are welcome! Please fork the repository and send a pull request.
 
 ## Changelog
 
-- **v1.0.0.0  (2024/06/18)**: Initial commit.
-- **v1.0.0.1  (2024/06/18)**: function name fix.
-- **v1.0.0.2  (2024/06/22)**: bug fix.
-- **v1.0.0.3  (2025/02/07)**: DipSW support.
-- **v1.0.0.4  (2025/07/23)**: minor bug fix 
-- **v1.0.0.5  (2026/02/03)**: fix registers N and A
-- **v1.0.0.7  (2026/02/03)**: improvements
-- **v1.0.0.8  (2026/02/25)**: Update Readme
-- **v1.0.0.9  (2026/03/21)**: Refactor
-- **v1.0.0.10 (2026/03/22)**: Msg Format Improvements
-- **v1.0.0.11 (2026/03/24)**: function name fix
+| Version | Date        | Changes Made               |
+|---------|-------------|---------------------------|
+| 1.0.0.0 | 2024/06/18 | Initial commit. |
+| 1.0.0.1 | 2024/06/18 | function name fix. |
+| 1.0.0.2 | 2024/06/22 | bug fix. |
+| 1.0.0.3 | 2025/02/07 | DipSW support. |
+| 1.0.0.4 | 2025/07/23 | minor bug fix. |
+| 1.0.0.5 | 2026/02/03 | fix registers N and A. |
+| 1.0.0.7 | 2026/02/03 | improvements. |
+| 1.0.0.8 | 2026/02/25 | Update Readme. |
+| 1.0.0.9 | 2026/03/21 | Refactor. |
+| 1.0.0.10 | 2026/03/22 | Msg Format Improvements. |
+| 1.0.0.11 | 2026/03/24 | function name fix. |
+---
 
 ## License
 
