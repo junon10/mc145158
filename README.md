@@ -88,7 +88,6 @@ Contributions are welcome! Please fork the repository and send a pull request.
 | 1.0.0.9 | 2026/03/21 | Refactor. |
 | 1.0.0.10 | 2026/03/22 | Msg Format Improvements. |
 | 1.0.0.11 | 2026/03/24 | function name fix. |
----
 
 ## License
 
