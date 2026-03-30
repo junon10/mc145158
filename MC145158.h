@@ -1,10 +1,12 @@
 /*
-  Lib: PLL MC145158
-  Version: 1.0.0.10
-  Date: 2026/03/22
-  Author: Junon M
-  License: GPLv3
-*/
+ * Project: MC145158 Arduino Library
+ * File: MC145158.h
+ * Version: v1.0.0.12
+ * Date: 2026/03/29
+ * License: GNU GPL v3.0
+ * Developed by: Junon M. (2008-2026)
+ * Description: Embedded systems and RF signal processing.
+ */
 
 #ifndef MC145158_h
 #define MC145158_h
