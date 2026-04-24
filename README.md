@@ -93,3 +93,4 @@ Contributions are welcome! Please fork the repository and send a pull request.
 | 1.0.0.10 | 2026/03/22 | Msg Format Improvements. |
 | 1.0.0.11 | 2026/03/24 | function name fix. |
 | 1.0.0.13 | 2026/03/30 | Auto commit. |
+| 1.0.0.14 | 2026/04/24 | Auto commit. |

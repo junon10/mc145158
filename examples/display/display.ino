@@ -1,12 +1,12 @@
 /*
- * Project: MC145158 Arduino Library
- * File: display.ino
- * Version: 1.0.0.13
- * Date: 2026/03/30
- * License: GNU GPL v3.0
- * Developed by: Junon M. (2008-2026)
- * Description: Embedded systems and RF signal processing.
- */
+ Project: MC145158 Arduino Library
+ File: display.ino
+ Version: 1.0.0.14
+ Date: 2026/04/24
+ License: GNU GPL v3.0
+ Developed by: Junon M. (2008-2026)
+ Description: Embedded systems and RF signal processing.
+*/
 
 #include <LiquidCrystal.h>
 #include "MC145158.h"
